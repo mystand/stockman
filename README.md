@@ -40,6 +40,11 @@ GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>/<PROCESSING_S
   * Задано, такой файл сеществует - будет отдан соответствующий файл
   * Задано, такой файл не сеществует - будет отдана ошибка 404
 
+Описание JSON ответа:
+{
+  file_name: 
+}
+
 ### Удаление изображения
 ```
 DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
