@@ -10,8 +10,8 @@
 ```
 POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 ```
-* `PROJECT_PRIVATE_KEY` - Секретный ключ проекта
-* `IMAGE_PRIVATE_KEY` - Секретный ключ изображения
+* `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
+* `IMAGE_PRIVATE_KEY` - Секретный ключ изображения, получается серверной функцией private_key(IMAGE_UNIQ_KEY)
 
 POST параметры
 
@@ -50,3 +50,10 @@ DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта
 * `IMAGE_PRIVATE_KEY` - Секретный ключ изображения
+* 
+
+# API Консоли
+
+stockman project new : Выдает PROJECT_PRIVATE_KEY
+stockman project list : > Выдает список PROJECT_PRIVATE_KEY
+stockman project remove <PROJECT_PRIVATE_KEY> : Удаляет всю папку с проектом
