@@ -52,6 +52,37 @@ DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 * `IMAGE_PRIVATE_KEY` - Секретный ключ изображения
 * 
 
+## Работа с галереями
+
+### Загрузка / обновление изображения
+```
+POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
+```
+* `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
+* `GALLERY_PRIVATE_KEY` - Секретный ключ галлереи, получается серверной функцией private_key(GALLERY_UNIQ_KEY)
+
+POST параметры
+
+| Name     | Description | Type |
+|:---------|:------------|:-----|
+| files     | Загружаемые изображения | массив File |
+| versions | Параметры версий (формат описан ниже) | Hash |
+
+```
+[
+    {
+        "id": <ITEM_ID>,
+        "versions": {
+            <ITEM_VERSION_NAME>: {
+                "settings": <ITEM_VERSION_SETTINGS>
+            }
+            ...
+        }
+    },
+    ...
+]
+```
+
 # API Консоли
 
 stockman project new : Выдает PROJECT_PRIVATE_KEY
