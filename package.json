@@ -1,0 +1,37 @@
+{
+  "name": "stockman",
+  "version": "0.0.1",
+  "description": "**Stockman** - сервер загрузки и отдачи файлов и изображений. Разработчики в своих проектах тратят много времени на реализацию хранения файлов и картинок. Наш сервис берет эту рутину на себя и позволяет разработчику обеспечивать эту функциональность, основываясь только на клиентском коде.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive --compilers coffee:coffee-script/register spec/",
+    "start": "coffee app.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mystand/stockman.git"
+  },
+  "author": "MyStand",
+  "devDependencies": {
+    "request": "*",
+    "nodemon": "*",
+    "mocha": "*",
+    "mocha-testdata": "*",
+    "chai": "*",
+    "faker": "*",
+    "rosie": "*",
+    "coffee-script": "~1.9.3"
+  },
+  "dependencies": {
+    "express": "^4.10.1",
+    "glob": "^4.0.0",
+    "mongodb": "^2.0.5",
+    "MD5": "^1.2.1",
+    "underscore": "^1.7.0",
+    "express-mongo-db": "^0.4.0",
+    "node-uuid": "^1.4.1",
+    "multer": "^0.1.6",
+    "node-gearman": "*",
+    "aws-sdk": "*"
+  }
+}
