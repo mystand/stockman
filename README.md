@@ -59,6 +59,14 @@ DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта
 * `IMAGE_PRIVATE_KEY` - Секретный ключ изображения
+ 
+Cервер вернет: 
+В случае успеха ответ с кодом 200
+В случае ошибки ответ с кодом ошибки (404 если не нашли галерею или 500 если внутренняя ошибка) и json-ом следующего вида:
+```
+{
+  errors: [<ERROR_CODE>...]
+}
 
 ## Работа с галереями
 
@@ -127,23 +135,13 @@ Cервер вернет:
 
 ### Удаление галери
 ```
-GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/galleries/<GALLERY_PUBLIC_KEY>
+POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
 ```
-* `PROJECT_PUBLIC_KEY` - Открытый ключ проекта
-* `GALLERY_PUBLIC_KEY` - Открытый ключ галереи
+* `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
+* `GALLERY_PRIVATE_KEY` - Секретный ключ галлереи, получается серверной функцией private_key(GALLERY_UNIQ_KEY)
 
 Cервер вернет: 
-В случае успеха ответ с кодом 200 и json-ом следующего вида:
-```
-{
-  count: <IMAGES_COUNT>,
-  images: [
-    origin: <IMAGE_PUBLIC_KEY>,
-    <VERSION_NAME>: <IMAGE_PUBLIC_KEY>
-    ...
-  ]
-}
-```
+В случае успеха ответ с кодом 200
 В случае ошибки ответ с кодом ошибки (404 если не нашли галерею или 500 если внутренняя ошибка) и json-ом следующего вида:
 ```
 {
