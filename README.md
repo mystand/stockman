@@ -8,7 +8,7 @@
 
 ### Загрузка / обновление изображения
 ```
-POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
+POST /<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
 * `IMAGE_PRIVATE_KEY` - Секретный ключ изображения, получается серверной функцией private_key(IMAGE_UNIQ_KEY)
@@ -36,7 +36,7 @@ Cервер вернет:
 
 ### Получение изображения
 ```
-GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_STRING>][.<EXTENSION>]
+GET /<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_STRING>][.<EXTENSION>]
 ```
 * `PROJECT_PUBLIC_KEY` - Открытй ключ проекта
 * `IMAGE_PUBLIC_KEY` - Открытый ключ изображения, если используется не оригинал картинки, а одна из версий, то публичный ключ получается из строки `<IMAGE_PRIVATE_KEY>_<VERSION_NAME>` 
@@ -55,7 +55,7 @@ GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_
 
 ### Удаление изображения
 ```
-DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
+DELETE /<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта
 * `IMAGE_PRIVATE_KEY` - Секретный ключ изображения
@@ -72,7 +72,7 @@ Cервер вернет:
 
 ### Загрузка / обновление галери
 ```
-POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
+POST /<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
 * `GALLERY_PRIVATE_KEY` - Секретный ключ галлереи, получается серверной функцией private_key(GALLERY_UNIQ_KEY)
@@ -109,7 +109,7 @@ Cервер вернет:
 
 ### Запрос галери
 ```
-GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/galleries/<GALLERY_PUBLIC_KEY>
+GET /<PROJECT_PUBLIC_KEY>/galleries/<GALLERY_PUBLIC_KEY>
 ```
 * `PROJECT_PUBLIC_KEY` - Открытый ключ проекта
 * `GALLERY_PUBLIC_KEY` - Открытый ключ галереи
@@ -135,7 +135,7 @@ Cервер вернет:
 
 ### Удаление галери
 ```
-POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
+DELETE /<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
 * `GALLERY_PRIVATE_KEY` - Секретный ключ галлереи, получается серверной функцией private_key(GALLERY_UNIQ_KEY)
