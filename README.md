@@ -36,7 +36,7 @@ Cервер вернет:
 
 ### Получение изображения
 ```
-GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>/<PROCESSING_STRING>[.<EXTENSION>]
+GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_STRING>][.<EXTENSION>]
 ```
 * `PROJECT_PUBLIC_KEY` - Открытй ключ проекта
 * `IMAGE_PUBLIC_KEY` - Открытый ключ изображения, если используется не оригинал картинки, а одна из версий, то публичный ключ получается из строки `<IMAGE_PRIVATE_KEY>_<VERSION_NAME>` 
@@ -50,7 +50,7 @@ GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>/<PROCESSING_S
 {
   size: <SIZE>,
   extension: <EXTENSION>,
-  demensions: <EXTENSION>
+  dementions: <DEMENTIONS>
 }
 
 ### Удаление изображения
@@ -101,10 +101,10 @@ Cервер вернет:
 
 ### Запрос галери
 ```
-GET http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
+GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/galleries/<GALLERY_PUBLIC_KEY>
 ```
-* `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
-* `GALLERY_PRIVATE_KEY` - Секретный ключ галлереи, получается серверной функцией private_key(GALLERY_UNIQ_KEY)
+* `PROJECT_PUBLIC_KEY` - Открытый ключ проекта
+* `GALLERY_PUBLIC_KEY` - Открытый ключ галереи
 
 Cервер вернет: 
 В случае успеха json следующего вида:
