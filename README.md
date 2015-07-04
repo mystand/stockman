@@ -107,13 +107,47 @@ GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/galleries/<GALLERY_PUBLIC_KEY>
 * `GALLERY_PUBLIC_KEY` - Открытый ключ галереи
 
 Cервер вернет: 
-В случае успеха json следующего вида:
+В случае успеха ответ с кодом 200 и json-ом следующего вида:
 ```
 {
-  count: <IMAGES_COUNT>
+  count: <IMAGES_COUNT>,
   images: [
-    
+    origin: <IMAGE_PUBLIC_KEY>,
+    <VERSION_NAME>: <IMAGE_PUBLIC_KEY>
+    ...
   ]
+}
+```
+В случае ошибки ответ с кодом ошибки (404 если не нашли галерею или 500 если внутренняя ошибка) и json-ом следующего вида:
+```
+{
+  errors: [<ERROR_CODE>...]
+}
+```
+
+### Удаление галери
+```
+GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/galleries/<GALLERY_PUBLIC_KEY>
+```
+* `PROJECT_PUBLIC_KEY` - Открытый ключ проекта
+* `GALLERY_PUBLIC_KEY` - Открытый ключ галереи
+
+Cервер вернет: 
+В случае успеха ответ с кодом 200 и json-ом следующего вида:
+```
+{
+  count: <IMAGES_COUNT>,
+  images: [
+    origin: <IMAGE_PUBLIC_KEY>,
+    <VERSION_NAME>: <IMAGE_PUBLIC_KEY>
+    ...
+  ]
+}
+```
+В случае ошибки ответ с кодом ошибки (404 если не нашли галерею или 500 если внутренняя ошибка) и json-ом следующего вида:
+```
+{
+  errors: [<ERROR_CODE>...]
 }
 ```
 
