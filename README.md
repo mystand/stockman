@@ -26,6 +26,13 @@ POST параметры
   <VERSION_NAME>: <PROCESSING_STRING>
 }
 ```
+Cервер вернет: 
+В случае успеха пустой json {} с кодом 200
+В случае ошибки код json формата
+{
+  errors: [<ERROR_CODE>...]
+}
+с http кодом ошибки (пока всегда 500)
 
 ### Получение изображения
 ```
@@ -41,7 +48,9 @@ GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>/<PROCESSING_S
 
 Описание JSON ответа:
 {
-  file_name: 
+  size: <SIZE>,
+  extension: <EXTENSION>,
+  demensions: <EXTENSION>
 }
 
 ### Удаление изображения
@@ -50,11 +59,10 @@ DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 ```
 * `PROJECT_PRIVATE_KEY` - Секретный ключ проекта
 * `IMAGE_PRIVATE_KEY` - Секретный ключ изображения
-* 
 
 ## Работа с галереями
 
-### Загрузка / обновление изображения
+### Загрузка / обновление галери
 ```
 POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
 ```
@@ -73,14 +81,40 @@ POST параметры
     {
         "id": <ITEM_ID>,
         "versions": {
-            <ITEM_VERSION_NAME>: {
-                "settings": <ITEM_VERSION_SETTINGS>
-            }
+            <ITEM_VERSION_NAME>: <ITEM_PROCESSING_STRING>
             ...
         }
     },
     ...
 ]
+```
+
+Cервер вернет: 
+В случае успеха пустой json {} с кодом 200
+В случае ошибки код json формата
+```
+{
+  errors: [<ERROR_CODE>...]
+}
+```
+с http кодом ошибки (пока всегда 500)
+
+### Запрос галери
+```
+GET http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/galleries/<GALLERY_PRIVATE_KEY>
+```
+* `PROJECT_PRIVATE_KEY` - Секретный ключ проекта, получается коснольной утилитой stockman при создании проекта
+* `GALLERY_PRIVATE_KEY` - Секретный ключ галлереи, получается серверной функцией private_key(GALLERY_UNIQ_KEY)
+
+Cервер вернет: 
+В случае успеха json следующего вида:
+```
+{
+  count: <IMAGES_COUNT>
+  images: [
+    
+  ]
+}
 ```
 
 # API Консоли
