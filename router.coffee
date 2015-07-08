@@ -23,21 +23,26 @@ router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res)
     res.send error: error
 
 #2) просмотр картинки
-#GET http://v1.stockman.com/<PROJECT_ID>/<CATEGORY_PUBLIC_KEY>/<OBJECT_PUBLIC_KEY>/<OBJECT_VERSION>
+#GET <PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[.<EXTENSION>]
 router.get '/:projectPublicKey/:imagePublicKeyWithExtension', (req, res) ->
   [imagePublicKey, extension] = req.params.imagePublicKeyWithExtension.split(/.(\w+)$/, 2)
-  fileName = "./#{req.params.projectPublicKey}/#{req.params.imagePublicKey}"
   if !extension?
-    provider.completeFileName(fileName).then (fileName) ->
+    provider.completeFileName(req.params.projectPublicKey, imagePublicKey).then (fileName) ->
       res.sendFile fileName
   else
+    fileName = "./#{req.params.projectPublicKey}/#{req.params.imagePublicKey}"
     res.sendFile fileName
 
 #3) удаление картинки
-#DELETE http://v1.stockman.com/<PROJECT_ID>/<CATEGORY_PRIVATE_KEY>/<OBJECT_PRIVATE_KEY>
-router.delete '/:projectId/:categoryPrivateKey/:objectPrivateKey', (req, res) ->
-  req.object.deleted = yes
-  req.db.collection('objects').save req.object, (errors, result) ->
-    res.send req.object
+#DELETE <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
+router.delete '/:projectPrivateKey/:imagePrivateKey', (req, res) ->
+  projectPublicKey = (new Coder).priv2pub(req.params.projectPrivateKey)
+  provider.getSalt(projectPublicKey).then (salt) ->
+    imagePublicKey = (new Coder salt).priv2pub req.params.imagePrivateKey
+    provider.deleteFile projectPublicKey, imagePublicKey
+  .then ->
+    res.send {}
+  .catch (error) ->
+    res.send error: error
 
 module.exports = router

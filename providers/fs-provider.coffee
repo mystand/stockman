@@ -1,8 +1,11 @@
 fs = require 'fs'
+_ = require 'underscore'
 
 class FsProvider
   constructor: ->
-    @extensions = {}
+    @extensions = {
+#     "projectPublicKey/imagePublicKey": [extensions]
+    }
 
   getSalt: (projectPublicKey) =>
     new Promise (resolve, reject) =>
@@ -20,25 +23,49 @@ class FsProvider
         else
           resolve()
 
-  completeFileName: (fileName) =>
+  completeFileName: (projectPublicKey, imagePublicKey) =>
     new Promise (resolve, reject) =>
-      result = @_findInExtensions(fileName)
-      return resolve(result) if result?
-      @_reloadExtensions().then () =>
-        resolve @_findInExtensions(fileName)
+      extension = @_findInExtensions(projectPublicKey, imagePublicKey)
+      if result?
+        fileName = "./#{projectPublicKey}/#{imagePublicKey}.#{extension}"
+        resolve(fileName)
+      else
+        @_reloadExtensions(projectPublicKey).then () =>
+          extension = @_findInExtensions(projectPublicKey, imagePublicKey)
+          fileName = "./#{projectPublicKey}/#{imagePublicKey}.#{extension}"
+          resolve fileName
 
-
-  _findInExtensions: (fileName) =>
-    @extensions[fileName]
+  _findInExtensions: (projectPublicKey, imagePublicKey) =>
+    extensions = @extensions["#{projectPublicKey}/#{imagePublicKey}"]
+    _.difference(extensions, ['json'])[0]
 
   _reloadExtensions: (projectPublicKey) =>
     new Promise (resolve, reject) =>
-      fs.readdir './', (err, files) =>
+      fs.readdir "./#{projectPublicKey}", (err, files) =>
         if err
-          reject 'can\'t read the project directory'
+          reject "can't read the project directory: #{projectPublicKey}"
         else
-          for file in files
-            console.log file
+          @_fillExtensions(projectPublicKey, files)
+          resolve()
+
+  _fillExtensions: (projectPublicKey, files) =>
+    for fileName in files
+      [baseName, extension] = fileName.split /.(\w+)$/, 2
+      basePath = "#{projectPublicKey}/#{baseName}"
+      @extensions[basePath] ||= []
+      @extensions[basePath].push extension
+
+  deleteFile: (file, projectPublicKey, imagePublicKey) =>
+    new Promise (resolve, reject) =>
+      @_reloadExtensions(projectPublicKey).then =>
+        fileBasePath = "#{projectPublicKey}/#{imagePublicKey}"
+        @extensions[fileBasePath].forEach (extension) ->
+          filePath = "./#{fileBasePath}.#{extension}"
+          fs.unlink filePath, (err) =>
+            if err
+              reject "can't remove file: #{filePath}"
+            else
+              resolve()
 
 
 module.exports = FsProvider
