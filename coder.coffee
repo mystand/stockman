@@ -1,7 +1,7 @@
 md5 = require 'MD5'
 
 class Coder
-  constructor: (@salt) ->
+  constructor: (@salt = '') ->
 
   uniq2priv: (uniqKey) =>
     md5 uniqKey + @salt

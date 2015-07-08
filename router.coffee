@@ -1,56 +1,43 @@
+fs = require 'fs'
 express = require 'express'
 router = express.Router()
 _ = require 'underscore'
 Coder = require './coder'
-
 multer = require 'multer'
+provider = new (require './providers/fs-provider')
+
+# TODO: вынести это в либу-провайдер
+fileNameHash = {}
+completeFileName = (imagePublicKey, callback) ->
+  if fileNameHash[imagePublicKey]
+    callback fileNameHash[imagePublicKey]
+#  else
+
 multerMiddleware = multer
   dest: './tmp/'
-#  changeDest: (dest, req, res) ->
-#    console.log req.projectPublicKey
-#    "./#{req.projectPublicKey}/"
-#  rename: (fieldname, filename, req, res) ->
-#    req.imagePublicKey
-#    console.log req.imagePublicKey
-
-router.param 'projectPrivateKey', (req, res, next, projectPrivateKey) ->
-  req.coder = new Coder 'SALT1'
-  req.projectPublicKey = projectPrivateKey
-  next()
-
-router.param 'projectPublicKey', (req, res, next, projectPublicKey) ->
-  req.projectPublicKey = projectPublicKey
-  next()
-
-router.param 'imagePrivateKey', (req, res, next, imagePrivateKey) ->
-  req.imagePublicKey = imagePrivateKey
-  next()
-
-router.param 'imagePublicKey', (req, res, next, imagePublicKey) ->
-  req.imagePublicKey = imagePublicKey
-  next()
-
-router.get '/:mikle', (req, res) ->
-  res.send "#{req.params.mikle}"
 
 #1) загрузка картинки
 #POST <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
 router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res) ->
-  params = _.extend({}, req.params, req.files)
-
-  console.log req.projectPublicKey
-  console.log req.imagePublicKey
-
-  if _.isEmpty(params)
-    res.send 'empty params'
-    return
-
-  res.send 'OK'
+  projectPublicKey = (new Coder).priv2pub(req.params.projectPrivateKey)
+  provider.getSalt(projectPublicKey).then (salt) ->
+    coder = new Coder salt
+    imagePublicKey = coder.priv2pub req.params.imagePrivateKey
+    provider.saveFile req.files.file, projectPublicKey, imagePublicKey
+  .then ->
+    res.send {}
+  .catch (error) ->
+    res.send error: error
 
 #2) просмотр картинки
 #GET http://v1.stockman.com/<PROJECT_ID>/<CATEGORY_PUBLIC_KEY>/<OBJECT_PUBLIC_KEY>/<OBJECT_VERSION>
-router.get '/:projectId/:categoryPublicKey/:objectPublicKey/:objectVersion', (req, res) ->
-  res.send req.object
+router.get '/:projectPublicKey/:imagePublicKeyWithExtension', (req, res) ->
+  [imagePublicKey, extension] = req.params.imagePublicKeyWithExtension.split(/.(\w+)$/, 2)
+  fileName = "./#{req.params.projectPublicKey}/#{req.params.imagePublicKey}"
+  unless extension
+    fileName = completeFileName(fileName)
+
+  res.sendFile
 
 #3) удаление картинки
 #DELETE http://v1.stockman.com/<PROJECT_ID>/<CATEGORY_PRIVATE_KEY>/<OBJECT_PRIVATE_KEY>
