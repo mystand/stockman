@@ -6,13 +6,6 @@ Coder = require './coder'
 multer = require 'multer'
 provider = new (require './providers/fs-provider')
 
-# TODO: вынести это в либу-провайдер
-fileNameHash = {}
-completeFileName = (imagePublicKey, callback) ->
-  if fileNameHash[imagePublicKey]
-    callback fileNameHash[imagePublicKey]
-#  else
-
 multerMiddleware = multer
   dest: './tmp/'
 
@@ -34,10 +27,11 @@ router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res)
 router.get '/:projectPublicKey/:imagePublicKeyWithExtension', (req, res) ->
   [imagePublicKey, extension] = req.params.imagePublicKeyWithExtension.split(/.(\w+)$/, 2)
   fileName = "./#{req.params.projectPublicKey}/#{req.params.imagePublicKey}"
-  unless extension
-    fileName = completeFileName(fileName)
-
-  res.sendFile
+  if !extension?
+    provider.completeFileName(fileName).then (fileName) ->
+      res.sendFile fileName
+  else
+    res.sendFile fileName
 
 #3) удаление картинки
 #DELETE http://v1.stockman.com/<PROJECT_ID>/<CATEGORY_PRIVATE_KEY>/<OBJECT_PRIVATE_KEY>

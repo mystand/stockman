@@ -20,6 +20,17 @@ class FsProvider
         else
           resolve()
 
+  completeFileName: (fileName) =>
+    new Promise (resolve, reject) =>
+      result = @_findInExtensions(fileName)
+      return resolve(result) if result?
+      @_reloadExtensions().then () =>
+        resolve @_findInExtensions(fileName)
+
+
+  _findInExtensions: (fileName) =>
+    @extensions[fileName]
+
   _reloadExtensions: (projectPublicKey) =>
     new Promise (resolve, reject) =>
       fs.readdir './', (err, files) =>

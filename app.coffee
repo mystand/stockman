@@ -1,5 +1,4 @@
 express = require 'express'
-mongodb = require 'mongodb'
 router = require './router'
 
 app = express()
