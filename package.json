@@ -30,6 +30,7 @@
     "node-uuid": "^1.4.1",
     "multer": "^0.1.6",
     "node-gearman": "*",
-    "aws-sdk": "*"
+    "aws-sdk": "*",
+    "argparse": "*"
   }
 }

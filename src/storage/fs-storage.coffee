@@ -1,7 +1,7 @@
 fs = require 'fs'
 _ = require 'underscore'
 
-class FsProvider
+class FsStorage
   constructor: ->
     @extensions = {
 #     "projectPublicKey/imagePublicKey": [extensions]
@@ -68,4 +68,9 @@ class FsProvider
       @extensions[basePath] ||= []
       @extensions[basePath].push extension
 
-module.exports = FsProvider
+  @addArguments: (parser) ->
+    parser.addArgument [ '--path' ],
+      help: 'Files path'
+      defaultValue: '.'
+
+module.exports = FsStorage
