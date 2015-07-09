@@ -1,7 +1,7 @@
 fs = require 'fs'
 _ = require 'underscore'
 
-class FsProvider
+class FsStorage
   constructor: ->
     @extensions = {
 #     "projectPublicKey/imagePublicKey": [extensions]
@@ -28,12 +28,25 @@ class FsProvider
       extension = @_findInExtensions(projectPublicKey, imagePublicKey)
       if result?
         fileName = "./#{projectPublicKey}/#{imagePublicKey}.#{extension}"
-        resolve(fileName)
+        resolve fileName
       else
-        @_reloadExtensions(projectPublicKey).then () =>
+        @_reloadExtensions(projectPublicKey).then =>
           extension = @_findInExtensions(projectPublicKey, imagePublicKey)
           fileName = "./#{projectPublicKey}/#{imagePublicKey}.#{extension}"
           resolve fileName
+        , reject
+
+  deleteFile: (file, projectPublicKey, imagePublicKey) =>
+    new Promise (resolve, reject) =>
+      @_reloadExtensions(projectPublicKey).then =>
+        fileBasePath = "#{projectPublicKey}/#{imagePublicKey}"
+        @extensions[fileBasePath].forEach (extension) ->
+          filePath = "./#{fileBasePath}.#{extension}"
+          fs.unlink filePath, (err) =>
+            if err
+              reject "can't remove file: #{filePath}"
+            else
+              resolve()
 
   _findInExtensions: (projectPublicKey, imagePublicKey) =>
     extensions = @extensions["#{projectPublicKey}/#{imagePublicKey}"]
@@ -55,17 +68,9 @@ class FsProvider
       @extensions[basePath] ||= []
       @extensions[basePath].push extension
 
-  deleteFile: (file, projectPublicKey, imagePublicKey) =>
-    new Promise (resolve, reject) =>
-      @_reloadExtensions(projectPublicKey).then =>
-        fileBasePath = "#{projectPublicKey}/#{imagePublicKey}"
-        @extensions[fileBasePath].forEach (extension) ->
-          filePath = "./#{fileBasePath}.#{extension}"
-          fs.unlink filePath, (err) =>
-            if err
-              reject "can't remove file: #{filePath}"
-            else
-              resolve()
+  @addArguments: (parser) ->
+    parser.addArgument [ '--path' ],
+      help: 'Files path'
+      defaultValue: '.'
 
-
-module.exports = FsProvider
+module.exports = FsStorage
