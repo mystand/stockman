@@ -31,6 +31,7 @@
     "multer": "^0.1.6",
     "node-gearman": "*",
     "aws-sdk": "*",
-    "argparse": "*"
+    "argparse": "*",
+    "mkdirp": "0.5.1"
   }
 }

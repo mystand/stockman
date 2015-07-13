@@ -1,15 +1,25 @@
 fs = require 'fs'
 request = require 'request'
 assert = require('chai').assert
-Coder = require '../coder'
+Coder = require '../src/coder'
+
+#########
+# Constants
+#########
+
+API_HOST = 'http://localhost:3333'
+
+SALT = "0246d073-0572-48a1-9c6a-5acd1eb1e75e"
+CODER = new Coder SALT
+PROJECT_PRIVATE_KEY = "0246d0735acd1eb1e75e"
+PROJECT_PUBLIC_KEY = (new Coder).priv2pub PROJECT_PRIVATE_KEY
+IMAGE_PRIVATE_KEY = "1246d0735a2d1eb1e75e"
+
+JPG_PATH = './spec/fixtures/lemongrab.jpg'
 
 #########
 # Helpers
 #########
-
-salt = "0246d073-0572-48a1-9c6a-5acd1eb1e75e"
-coder = new Coder salt
-
 
 btoa = (string) ->
   new Buffer(string).toString('base64')
@@ -22,9 +32,6 @@ errorFilterFor = (callback) ->
     exitWithError(error) if error?.code is 'ECONNREFUSED'
     callback(error, response, body)
 
-API_HOST = 'http://localhost:3333'
-PROJECT_PRIVATE_KEY = "0246d0735acd1eb1e75e"
-
 uploadObjectToStockman = (privateObjectKey, filePath) ->
   new Promise (resolve, reject) =>
     url = "#{API_HOST}/#{PROJECT_PRIVATE_KEY}/#{privateObjectKey}"
@@ -32,23 +39,24 @@ uploadObjectToStockman = (privateObjectKey, filePath) ->
       url: url
       formData:
         file: fs.createReadStream filePath
-    request.post options, (error, response, callback) ->
-      resolve response, callback
+    request.post options, (error, response, _) ->
+      resolve response
 
 #########
 # Tests
 #########
 
-IMAGE_PRIVATE_KEY = "1246d0735a2d1eb1e75e"
-JPG_PATH = './spec/fixtures/lemongrab.jpg'
-
 describe 'Stockman api', ->
+  before ->
+    fs.writeFileSync "./tmp/#{PROJECT_PUBLIC_KEY}.salt", SALT
+
   describe 'for single picture', ->
     describe 'POST upload image', ->
       # POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
-      it 'should be filled', (done) ->
-        uploadObjectToStockman(IMAGE_PRIVATE_KEY, JPG_PATH).then (response, body) ->
-          done()
+      it 'should be filled', () ->
+        uploadObjectToStockman(IMAGE_PRIVATE_KEY, JPG_PATH).then (response) ->
+          assert.equal response.statusCode, 200
+          assert.equal response.body, '{}'
 
     describe 'GET download image', ->
       # GET http://v1.stockman.com/<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_STRING>][.<EXTENSION>]
