@@ -1,6 +1,7 @@
 fs = require 'fs'
 _ = require 'underscore'
 mkdirp = require 'mkdirp'
+Path = require 'path'
 
 class FsStorage
   constructor: ->
@@ -13,7 +14,7 @@ class FsStorage
     new Promise (resolve, reject) =>
       fs.readFile @_buildPath("#{projectPublicKey}.salt"), (err, salt) =>
         if err
-          reject "can't access to the project salt file"
+          reject "can't access to the project salt file: #{err}"
         else
           resolve salt
 
@@ -29,13 +30,19 @@ class FsStorage
       filePath = "#{projectPath}/#{imagePublicKey}.#{file.extension}"
       fs.rename file.path, filePath, (err) =>
         if err
-          console.log("can't move file (#{file.path}) to the target path (#{filePath})")
-          reject "can't move file (#{file.path}) to the target path (#{filePath})"
-        else
-          resolve()
+          throw "can't move file (#{file.path}) to the target path (#{filePath})"
 
+  getFilePath: (projectPublicKey, imagePublicKey, extension) =>
+    new Promise (resolve, reject) =>
+      if extension?
+        resolve "./#{projectPublicKey}/#{imagePublicKey}.#{extension}"
+      else
+        @_completeFileName(projectPublicKey, imagePublicKey).then (fileName) ->
+          resolve fileName
+    .then (relativeFilePath) =>
+      Path.resolve @path, relativeFilePath
 
-  completeFileName: (projectPublicKey, imagePublicKey) =>
+  _completeFileName: (projectPublicKey, imagePublicKey) =>
     new Promise (resolve, reject) =>
       extension = @_findInExtensions(projectPublicKey, imagePublicKey)
       if result?
@@ -61,7 +68,7 @@ class FsStorage
               resolve()
 
   _buildPath: (path) =>
-    "#{@path}/#{path}"
+    Path.join @path, path
 
   _findInExtensions: (projectPublicKey, imagePublicKey) =>
     extensions = @extensions["#{projectPublicKey}/#{imagePublicKey}"]
