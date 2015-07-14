@@ -1,33 +1,41 @@
 fs = require 'fs'
 _ = require 'underscore'
+path = require 'path'
+Coder = require '../coder'
 mkdirp = require 'mkdirp'
-Path = require 'path'
 
 class FsStorage
-  constructor: ->
+  constructor: (@config) ->
+    @path = @config.path
     @extensions = {
 #     "projectPublicKey/imagePublicKey": [extensions]
     }
-    @path = './tmp'
 
   getSalt: (projectPublicKey) =>
     new Promise (resolve, reject) =>
-      fs.readFile @_buildPath("#{projectPublicKey}.salt"), (err, salt) =>
+      fs.readFile path.join(@path, projectPublicKey, '.project'), (err, json) =>
         if err
-          reject "can't access to the project salt file: #{err}"
+          reject "can't access to the project data file: #{err}"
         else
-          resolve salt
+          try
+            projectData = JSON.parse json
+          catch
+            reject "can't parse project data file"
+          if projectData.salt?
+            resolve projectData.salt
+          else
+            reject "project data file does not contains salt"
 
   saveFile: (file, projectPublicKey, imagePublicKey) =>
-    projectPath = @_buildPath projectPublicKey
+    projectPath = path.join @path, projectPublicKey
     new Promise (resolve, reject) =>
-      mkdirp projectPath, (err) ->
+      fs.access projectPath, fs.R_OK | fs.W_OK | fs.X_OK, (err) ->
         if err
-          reject "can't create dir: #{projectPath}"
+          reject "can't access to the project dir"
         else
           resolve()
-    .then () ->
-      filePath = "#{projectPath}/#{imagePublicKey}.#{file.extension}"
+    .then ->
+      filePath = path.join projectPath, "#{imagePublicKey}#{file.extension}"
       fs.rename file.path, filePath, (err) =>
         if err
           throw "can't move file (#{file.path}) to the target path (#{filePath})"
@@ -40,9 +48,34 @@ class FsStorage
         @_completeFileName(projectPublicKey, imagePublicKey).then (fileName) ->
           resolve fileName
     .then (relativeFilePath) =>
-      Path.resolve @path, projectPublicKey, relativeFilePath
+      path.resolve @path, projectPublicKey, relativeFilePath
 
-  #  returns <filename>.<extension> without project's folder name
+  deleteFile: (projectPublicKey, imagePublicKey) =>
+    new Promise (resolve, reject) =>
+      @_reloadExtensions(projectPublicKey).then =>
+        fileBasePath = "#{projectPublicKey}/#{imagePublicKey}"
+        extensions = @extensions[fileBasePath]
+        deleted = _.after extensions.length, resolve
+        extensions.forEach (extension) ->
+          filePath = "#{fileBasePath}#{extension}"
+          fs.unlink filePath, (err) =>
+            if err
+              reject "can't remove file: #{filePath}"
+            else
+              deleted()
+
+  addProject: =>
+    projectPrivateKey = Coder.randomKey()
+    projectPublicKey = (new Coder).priv2pub projectPrivateKey
+    salt = Coder.randomSalt()
+    projectPath = path.join @path, projectPublicKey
+    mkdirp.sync projectPath
+    projectFile = path.join projectPath, '.project'
+    fd = fs.openSync projectFile, 'w'
+    fs.writeSync fd, JSON.stringify({salt: salt, privateKey: projectPrivateKey})
+    {projectPath, projectPrivateKey, salt}
+
+  #  returns <filename><extension> without project's folder name
   #
   _completeFileName: (projectPublicKey, imagePublicKey) =>
     new Promise (resolve, reject) =>
@@ -55,44 +88,23 @@ class FsStorage
           resolve "#{imagePublicKey}.#{extension}"
         , reject
 
-  deleteFile: (file, projectPublicKey, imagePublicKey) =>
-    new Promise (resolve, reject) =>
-      @_reloadExtensions(projectPublicKey).then =>
-        fileBasePath = "#{projectPublicKey}/#{imagePublicKey}"
-        @extensions[fileBasePath].forEach (extension) ->
-          filePath = @_buildPath("#{fileBasePath}.#{extension}")
-          fs.unlink filePath, (err) =>
-            if err
-              reject "can't remove file: #{filePath}"
-            else
-              resolve()
-
-  _buildPath: (path) =>
-    Path.join @path, path
+  # Working with extensions
 
   _findInExtensions: (projectPublicKey, imagePublicKey) =>
     extensions = @extensions["#{projectPublicKey}/#{imagePublicKey}"]
-    _.difference(extensions, ['json'])[0]
+    _.find extensions, (extension) -> extension != '.json'
 
   _reloadExtensions: (projectPublicKey) =>
     new Promise (resolve, reject) =>
-      fs.readdir @_buildPath("#{projectPublicKey}"), (err, files) =>
+      fs.readdir @_buildPath(projectPublicKey), (err, files) =>
         if err
           reject "can't read the project directory: #{projectPublicKey}"
         else
-          @_fillExtensions(projectPublicKey, files)
+          for fileName in files
+            {name:imagePublicKey, ext:extension} = path.parse fileName
+            basePath = "#{projectPublicKey}/#{imagePublicKey}"
+            @extensions[basePath] ||= []
+            @extensions[basePath].push extension
           resolve()
-
-  _fillExtensions: (projectPublicKey, files) =>
-    for fileName in files
-      [baseName, extension] = fileName.split /.(\w+)$/, 2
-      basePath = "#{projectPublicKey}/#{baseName}"
-      @extensions[basePath] ||= []
-      @extensions[basePath].push extension
-
-  @addArguments: (parser) ->
-    parser.addArgument [ '--path' ],
-      help: 'Files path'
-      defaultValue: '.'
 
 module.exports = FsStorage

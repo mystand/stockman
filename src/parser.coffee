@@ -1,32 +1,67 @@
-ArgumentParser = require('argparse').ArgumentParser
+argparse = require 'argparse'
+fs = require 'fs'
 
-parser = new ArgumentParser
-  version: '0.0.1',
-  addHelp: true,
+parser = new argparse.ArgumentParser
+  version: '0.0.1'
+  addHelp: true
   description: 'Image store and processing server'
 
-parser.addArgument [ '-c', '--config' ],
-  help: 'Load the configuration found in filename.'
+subparsers = parser.addSubparsers
+  title: 'Commands'
 
-parser.addArgument [ '-d', '--default-tile' ],
-  help: 'Image that will get the client if the requested tile is not found'
+# Start section
 
-parser.addArgument [ '--host' ],
+start = subparsers.addParser 'start',
+  addHelp: true
+  help: 'Start stockman server'
+
+start = start.addArgumentGroup
+  title: 'Base arguments'
+
+start.addArgument ['--host'],
   help: 'Server hostname'
   defaultValue: '0.0.0.0'
 
-parser.addArgument [ '-l', '--log' ],
+start.addArgument ['-l', '--log'],
   help: 'Log file (default stockman.log)'
   defaultValue: 'stockman.log'
 
-parser.addArgument [ '-p', '--port' ],
+start.addArgument ['-p', '--port'],
   help: 'Port (default 9999)'
   defaultValue: 9999
 
-parser.addArgument [ '--pid' ],
+start.addArgument ['--pid'],
   help: 'PID file'
 
-parser.addArgument [ '-s', '--socket' ],
+start.addArgument ['--socket'],
   help: 'Unix socket to listen'
+
+start.addArgument ['-s', '--storage'],
+  help: 'Using storage'
+  choices: storageChoices
+  defaultValue: 'fs'
+
+start.addArgument ['path'],
+  help: 'Working path'
+  defaultValue: '.'
+
+storageModuleFiles = fs.readdirSync './storage'
+storageChoices = for storageModuleFile in storageModuleFiles
+  storageModuleFile.replace /-storage.\w+$/, ''
+
+# add project section
+
+addProject = subparsers.addParser 'add-project',
+  addHelp: true,
+  help: 'Generate new project, register it in the system and puts project SALT'
+
+addProject.addArgument ['-s', '--storage'],
+  help: 'Using storage'
+  choices: storageChoices
+  defaultValue: 'fs'
+
+addProject.addArgument ['path'],
+  help: 'Working path'
+  defaultValue: '.'
 
 module.exports = parser

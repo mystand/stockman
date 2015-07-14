@@ -1,22 +1,30 @@
+#!/usr/bin/env coffee
+
 express = require 'express'
 router = require './router'
 fs = require 'fs'
 parser = require './parser'
 
-#Find all implementations of storage
-storageModuleFiles = fs.readdirSync './src/storage'
-storageModules = {}
-for storageModuleFile in storageModuleFiles
-  storageName = storageModuleFile.replace /-storage.\w+$/, ''
-  storageModule = require "./storage/#{storageModuleFile}"
-  storageModules[storageName] = storageModule
-  storageModule.addArguments? parser
+command = process.argv[2]
 
-app = express()
-app.use router
+switch command
+  when 'start'
+    config = parser.parseArgs()
+    Storage = require "./storage/#{config.storage}-storage"
+    storage = new Storage config
 
-if __filename == process.argv[1]
-  app.listen 3333, ->
-    console.log "Stockman listen #{3333} port..."
+    app = express()
+    app.use router
 
-module.exports.app = app
+    app.listen config.port, ->
+      console.log "Stockman listen #{config.port} port..."
+  when 'add-project'
+    config = parser.parseArgs()
+    Storage = require "./storage/#{config.storage}-storage"
+    storage = new Storage config
+
+    {projectPath, projectPrivateKey, salt} = storage.addProject()
+    console.log {projectPath, projectPrivateKey, salt}
+  else
+    parser.printHelp()
+    process.exit()

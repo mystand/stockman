@@ -32,7 +32,7 @@ exitWithError = (error) ->
   throw "Fatal error -> #{error}"
 
 errorFilterFor = (callback) ->
-  return (error, response, body) ->
+  (error, response, body) ->
     exitWithError(error) if error?.code is 'ECONNREFUSED'
     callback(error, response, body)
 

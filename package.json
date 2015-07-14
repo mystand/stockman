@@ -32,6 +32,6 @@
     "node-gearman": "*",
     "aws-sdk": "*",
     "argparse": "*",
-    "mkdirp": "0.5.1"
+    "mkdirp": "*"
   }
 }
