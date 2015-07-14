@@ -33,7 +33,7 @@ router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res)
 #GET <PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[.<EXTENSION>]
 router.get '/:projectPublicKey/:imagePublicKeyWithExtension', (req, res) ->
   log.info "GET #{req.path}"
-  [imagePublicKey, extension] = req.params.imagePublicKeyWithExtension.split(/.(\w+)$/, 2)
+  [imagePublicKey, extension] = req.params.imagePublicKeyWithExtension.split(/\.(\w+)$/, 2)
   storage.getFilePath(req.params.projectPublicKey, imagePublicKey, extension).then (filePath) ->
     res.sendFile filePath
   .catch (error) ->

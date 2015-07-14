@@ -35,24 +35,24 @@ class FsStorage
   getFilePath: (projectPublicKey, imagePublicKey, extension) =>
     new Promise (resolve, reject) =>
       if extension?
-        resolve "./#{projectPublicKey}/#{imagePublicKey}.#{extension}"
+        resolve "#{imagePublicKey}.#{extension}"
       else
         @_completeFileName(projectPublicKey, imagePublicKey).then (fileName) ->
           resolve fileName
     .then (relativeFilePath) =>
-      Path.resolve @path, relativeFilePath
+      Path.resolve @path, projectPublicKey, relativeFilePath
 
+  #  returns <filename>.<extension> without project's folder name
+  #
   _completeFileName: (projectPublicKey, imagePublicKey) =>
     new Promise (resolve, reject) =>
       extension = @_findInExtensions(projectPublicKey, imagePublicKey)
       if result?
-        fileName = @_buildPath("#{projectPublicKey}/#{imagePublicKey}.#{extension}")
-        resolve fileName
+        resolve "#{imagePublicKey}.#{extension}"
       else
         @_reloadExtensions(projectPublicKey).then =>
           extension = @_findInExtensions(projectPublicKey, imagePublicKey)
-          fileName = @_buildPath("#{projectPublicKey}/#{imagePublicKey}.#{extension}")
-          resolve fileName
+          resolve "#{imagePublicKey}.#{extension}"
         , reject
 
   deleteFile: (file, projectPublicKey, imagePublicKey) =>

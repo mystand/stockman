@@ -75,7 +75,7 @@ describe 'Stockman api', ->
 
         # todo: try remove async
         given.async(
-          null,
+          undefined,
           'jpg'
         ).it 'with extension', (done, extension) ->
           uploadObject(IMAGE_PRIVATE_KEY, IMAGE_PATH).then ->
