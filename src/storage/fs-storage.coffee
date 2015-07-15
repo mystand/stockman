@@ -11,9 +11,9 @@ class FsStorage
 #     "projectPublicKey/imagePublicKey": [extensions]
     }
 
-  getSalt: (projectPublicKey) =>
+  getSalt: (projectPrivateKey) =>
     new Promise (resolve, reject) =>
-      fs.readFile path.join(@path, projectPublicKey, '.project'), (err, json) =>
+      fs.readFile path.join(@path, 'private', "#{Coder.priv2pub(projectPrivateKey)}.project"), (err, json) =>
         if err
           reject "can't access to the project data file: #{err}"
         else
@@ -27,7 +27,7 @@ class FsStorage
             reject "project data file does not contains salt"
 
   saveFile: (file, projectPublicKey, imagePublicKey) =>
-    projectPath = path.join @path, projectPublicKey
+    projectPath = path.join @path, 'public', projectPublicKey
     new Promise (resolve, reject) =>
       fs.access projectPath, fs.R_OK | fs.W_OK | fs.X_OK, (err) ->
         if err
@@ -43,17 +43,17 @@ class FsStorage
   getFilePath: (projectPublicKey, imagePublicKey, extension) =>
     new Promise (resolve, reject) =>
       if extension?
-        resolve "#{imagePublicKey}.#{extension}"
+        resolve "#{imagePublicKey}#{extension}"
       else
         @_completeFileName(projectPublicKey, imagePublicKey).then (fileName) ->
           resolve fileName
     .then (relativeFilePath) =>
-      path.resolve @path, projectPublicKey, relativeFilePath
+      path.join @path, 'public', projectPublicKey, relativeFilePath
 
   deleteFile: (projectPublicKey, imagePublicKey) =>
     new Promise (resolve, reject) =>
       @_reloadExtensions(projectPublicKey).then =>
-        fileBasePath = "#{projectPublicKey}/#{imagePublicKey}"
+        fileBasePath = path.join @path, 'public', projectPublicKey, imagePublicKey
         extensions = @extensions[fileBasePath]
         deleted = _.after extensions.length, resolve
         extensions.forEach (extension) ->
@@ -64,16 +64,21 @@ class FsStorage
             else
               deleted()
 
-  addProject: =>
+  addProject: (name) =>
     projectPrivateKey = Coder.randomKey()
     projectPublicKey = (new Coder).priv2pub projectPrivateKey
     salt = Coder.randomSalt()
-    projectPath = path.join @path, projectPublicKey
+    projectPath = path.join @path, 'public', projectPublicKey
     mkdirp.sync projectPath
-    projectFile = path.join projectPath, '.project'
+    mkdirp.sync path.join(@path, 'private')
+    projectFile = path.join @path, 'private', "#{projectPrivateKey}.json"
     fd = fs.openSync projectFile, 'w'
-    fs.writeSync fd, JSON.stringify({salt: salt, privateKey: projectPrivateKey})
-    {projectPath, projectPrivateKey, salt}
+    fs.writeSync fd, JSON.stringify({name: name, salt: salt, privateKey: projectPrivateKey, publicKey: projectPublicKey})
+    humanPath = path.join(@path, 'human')
+    mkdirp.sync humanPath
+    fs.symlinkSync projectPath, path.join(humanPath, name)
+    fs.symlinkSync projectFile, path.join(humanPath, name + '.json')
+    {name: name, projectPath, projectPrivateKey, salt, projectPublicKey}
 
   #  returns <filename><extension> without project's folder name
   #

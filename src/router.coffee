@@ -22,7 +22,7 @@ module.exports = (config, storage) ->
   router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res) ->
     log.info "POST #{req.path}"
     projectPublicKey = (new Coder).priv2pub(req.params.projectPrivateKey)
-    storage.getSalt(projectPublicKey).then (salt) ->
+    storage.getSalt(req.params.projectPrivateKey).then (salt) ->
       coder = new Coder salt
       imagePublicKey = coder.priv2pub req.params.imagePrivateKey
       storage.saveFile req.files.file, projectPublicKey, imagePublicKey
@@ -49,7 +49,7 @@ module.exports = (config, storage) ->
   router.delete '/:projectPrivateKey/:imagePrivateKey', (req, res) ->
     log.info "DELETE #{req.path}"
     projectPublicKey = (new Coder).priv2pub(req.params.projectPrivateKey)
-    storage.getSalt(projectPublicKey).then (salt) ->
+    storage.getSalt(req.params.projectPrivateKey).then (salt) ->
       imagePublicKey = (new Coder salt).priv2pub req.params.imagePrivateKey
       storage.deleteFile projectPublicKey, imagePublicKey
     .then ->

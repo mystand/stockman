@@ -6,6 +6,9 @@ class Coder
   priv2pub: (privKey) =>
     md5 privKey + @salt
 
+  @priv2pub: (privKey, salt = '') =>
+    md5 privKey + salt
+
   @randomKey: ->
     md5 Math.random()
 

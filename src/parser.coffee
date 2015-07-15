@@ -59,11 +59,14 @@ addProject = subparsers.addParser 'add-project',
 
 addProject.setDefaults command: 'add-project'
 
+addProject.addArgument ['name'],
+  help: 'Created project name'
+
 # override error
 
 _error = parser.error
 parser.error = ->
-  # Here we can override the standart error message
+  # Here we can override the default error message
   _error.apply @, arguments
 
 module.exports = parser
