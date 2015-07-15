@@ -6,6 +6,19 @@ parser = new argparse.ArgumentParser
   addHelp: true
   description: 'Image store and processing server'
 
+parser.addArgument ['-p', '--path'],
+  help: 'Working path'
+  defaultValue: '.'
+
+storageModuleFiles = fs.readdirSync './storage'
+storageChoices = for storageModuleFile in storageModuleFiles
+  storageModuleFile.replace /-storage.\w+$/, ''
+
+parser.addArgument ['-s', '--storage'],
+  help: 'Using storage'
+  choices: storageChoices
+  defaultValue: 'fs'
+
 subparsers = parser.addSubparsers
   title: 'Commands'
 
@@ -14,6 +27,8 @@ subparsers = parser.addSubparsers
 start = subparsers.addParser 'start',
   addHelp: true
   help: 'Start stockman server'
+
+start.setDefaults command: 'start'
 
 start = start.addArgumentGroup
   title: 'Base arguments'
@@ -26,7 +41,7 @@ start.addArgument ['-l', '--log'],
   help: 'Log file (default stockman.log)'
   defaultValue: 'stockman.log'
 
-start.addArgument ['-p', '--port'],
+start.addArgument ['--port'],
   help: 'Port (default 9999)'
   defaultValue: 9999
 
@@ -36,32 +51,19 @@ start.addArgument ['--pid'],
 start.addArgument ['--socket'],
   help: 'Unix socket to listen'
 
-start.addArgument ['-s', '--storage'],
-  help: 'Using storage'
-  choices: storageChoices
-  defaultValue: 'fs'
-
-start.addArgument ['path'],
-  help: 'Working path'
-  defaultValue: '.'
-
-storageModuleFiles = fs.readdirSync './storage'
-storageChoices = for storageModuleFile in storageModuleFiles
-  storageModuleFile.replace /-storage.\w+$/, ''
-
 # add project section
 
 addProject = subparsers.addParser 'add-project',
   addHelp: true,
   help: 'Generate new project, register it in the system and puts project SALT'
 
-addProject.addArgument ['-s', '--storage'],
-  help: 'Using storage'
-  choices: storageChoices
-  defaultValue: 'fs'
+addProject.setDefaults command: 'add-project'
 
-addProject.addArgument ['path'],
-  help: 'Working path'
-  defaultValue: '.'
+# override error
+
+_error = parser.error
+parser.error = ->
+  # Here we can override the standart error message
+  _error.apply @, arguments
 
 module.exports = parser
