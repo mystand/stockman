@@ -13,7 +13,7 @@ class FsStorage
 
   getSalt: (projectPrivateKey) =>
     new Promise (resolve, reject) =>
-      fs.readFile path.join(@path, 'private', "#{Coder.priv2pub(projectPrivateKey)}.project"), (err, json) =>
+      fs.readFile path.join(@path, 'private', "#{projectPrivateKey}.json"), (err, json) =>
         if err
           reject "can't access to the project data file: #{err}"
         else
@@ -35,7 +35,7 @@ class FsStorage
         else
           resolve()
     .then ->
-      filePath = path.join projectPath, "#{imagePublicKey}#{file.extension}"
+      filePath = path.join projectPath, "#{imagePublicKey}.#{file.extension}"
       fs.rename file.path, filePath, (err) =>
         if err
           throw "can't move file (#{file.path}) to the target path (#{filePath})"
@@ -78,7 +78,7 @@ class FsStorage
     mkdirp.sync humanPath
     fs.symlinkSync projectPath, path.join(humanPath, name)
     fs.symlinkSync projectFile, path.join(humanPath, name + '.json')
-    {name: name, projectPath, projectPrivateKey, salt, projectPublicKey}
+    {projectPrivateKey, salt}
 
   #  returns <filename><extension> without project's folder name
   #

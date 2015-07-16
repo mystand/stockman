@@ -1,5 +1,5 @@
 fs = require 'fs'
-path = require 'fs'
+path = require 'path'
 express = require 'express'
 _ = require 'underscore'
 Coder = require './coder'
@@ -17,6 +17,9 @@ module.exports = (config, storage) ->
     error: (message) ->
       console.log "ERROR: #{message}"
 
+  router.get '/hello', (req, res) ->
+    res.send 'hello'
+
   #1) загрузка картинки
   #POST <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
   router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res) ->
@@ -30,7 +33,7 @@ module.exports = (config, storage) ->
       res.send {}
     .catch (error) ->
       log.error error.stack
-      res.send error: error.toString()
+      res.status(500).send error: error.toString()
 
   #2) просмотр картинки
   #GET <PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[.<EXTENSION>]
@@ -42,7 +45,7 @@ module.exports = (config, storage) ->
       res.sendFile filePath
     .catch (error) ->
       log.error error
-      res.send error: error
+      res.status(500).send error: error
 
   #3) удаление картинки
   #DELETE <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
