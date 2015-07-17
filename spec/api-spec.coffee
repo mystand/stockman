@@ -54,14 +54,22 @@ uploadImage = (imageUniqKey, filePath) ->
       formData:
         file: fs.createReadStream filePath
     request.post options, (error, response) ->
-      resolve response
+      if error then reject(error) else resolve(response)
 
-downloadImage = (imagePublicKey, extension) ->
+downloadImage = (imageUniqKey, extension) ->
+  imagePublicKey = coder.uniq2pub imageUniqKey
   projectPublicKey = Coder.priv2pub projectPrivateKey
   url = "#{API_HOST}:#{API_PORT}/#{projectPublicKey}/#{imagePublicKey}#{extension}"
   new Promise (resolve, reject) =>
     request.get url, (error, response) ->
-      resolve response
+      if error then reject(error) else resolve(response)
+
+deleteImage = (imageUniqKey) ->
+  imagePrivateKey = coder.uniq2priv imageUniqKey
+  url = "#{API_HOST}:#{API_PORT}/#{projectPrivateKey}/#{imagePrivateKey}"
+  new Promise (resolve, reject) ->
+    request.del url, (error, response) ->
+      if error then reject(error) else resolve(response)
 
 #createProject
 
@@ -105,22 +113,23 @@ describe 'Stockman server', ->
           assert.equal response.statusCode, 200
           assert.equal response.body, '{}'
 
-    describe 'GET download image', ->
+    describe 'GET download image without processing string', ->
       # GET /<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_STRING>][.<EXTENSION>]
       describe 'should be success', ->
-
-        # todo: try remove async
         given.async('', '.jpg')
         .it 'with extension', (done, extension) ->
           uploadImage(SINGLE_IMAGE_UNIQ_KEY, SINGLE_IMAGE_PATH).then ->
-            imagePublicKey = coder.uniq2pub SINGLE_IMAGE_UNIQ_KEY
-            downloadImage imagePublicKey, extension
+            downloadImage SINGLE_IMAGE_UNIQ_KEY, extension
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE
             done()
           .catch (err) -> done(err)
-#
-#    describe 'DELETE remove image', ->
-#      # DELETE http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
-#      it 'should be filled', ->
+    #
+    describe 'DELETE remove image', ->
+      # DELETE /<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
+      it 'should be success', ->
+        uploadImage(SINGLE_IMAGE_UNIQ_KEY, SINGLE_IMAGE_PATH).then ->
+          deleteImage(SINGLE_IMAGE_UNIQ_KEY).then (response) ->
+            assert.equal response.statusCode, 200
+            assert.equal response.body, '{}'

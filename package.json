@@ -33,6 +33,7 @@
     "aws-sdk": "*",
     "argparse": "*",
     "mkdirp": "*",
-    "colors": "*"
+    "colors": "*",
+    "async": "*"
   }
 }

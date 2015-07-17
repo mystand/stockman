@@ -1,5 +1,6 @@
 fs = require 'fs'
 path = require 'path'
+async = require 'async'
 express = require 'express'
 _ = require 'underscore'
 Coder = require './coder'
@@ -24,7 +25,7 @@ module.exports = (config, storage) ->
   #POST <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
   router.post '/:projectPrivateKey/:imagePrivateKey', multerMiddleware, (req, res) ->
 #    log.info "POST #{req.path}"
-    projectPublicKey = (new Coder).priv2pub(req.params.projectPrivateKey)
+    projectPublicKey = Coder.priv2pub(req.params.projectPrivateKey)
     storage.getSalt(req.params.projectPrivateKey).then (salt) ->
       coder = new Coder salt
       imagePublicKey = coder.priv2pub req.params.imagePrivateKey
@@ -50,7 +51,7 @@ module.exports = (config, storage) ->
   #DELETE <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
   router.delete '/:projectPrivateKey/:imagePrivateKey', (req, res) ->
 #    log.info "DELETE #{req.path}"
-    projectPublicKey = (new Coder).priv2pub(req.params.projectPrivateKey)
+    projectPublicKey = Coder.priv2pub(req.params.projectPrivateKey)
     storage.getSalt(req.params.projectPrivateKey).then (salt) ->
       imagePublicKey = (new Coder salt).priv2pub req.params.imagePrivateKey
       storage.deleteFile projectPublicKey, imagePublicKey

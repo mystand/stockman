@@ -51,18 +51,17 @@ class FsStorage
       path.resolve path.join(@path, 'public', projectPublicKey, relativeFilePath)
 
   deleteFile: (projectPublicKey, imagePublicKey) =>
-    new Promise (resolve, reject) =>
-      @_reloadExtensions(projectPublicKey).then =>
-        fileBasePath = path.join @path, 'public', projectPublicKey, imagePublicKey
-        extensions = @extensions[fileBasePath]
-        deleted = _.after extensions.length, resolve
-        extensions.forEach (extension) ->
-          filePath = "#{fileBasePath}#{extension}"
+    @_reloadExtensions(projectPublicKey).then =>
+      fileBasePath = path.join projectPublicKey, imagePublicKey
+      extensions = @extensions[fileBasePath]
+      Promise.all _(extensions).map (extension) =>
+        new Promise (resolve, reject) =>
+          filePath = path.join @path, 'public', "#{fileBasePath}#{extension}"
           fs.unlink filePath, (err) =>
             if err
               reject "can't remove file: #{filePath}"
             else
-              deleted()
+              resolve()
 
   addProject: (name) =>
     projectPrivateKey = Coder.randomKey()
@@ -76,8 +75,8 @@ class FsStorage
     fs.writeSync fd, JSON.stringify({name: name, salt: salt, privateKey: projectPrivateKey, publicKey: projectPublicKey})
     humanPath = path.join(@path, 'human')
     mkdirp.sync humanPath
-    fs.symlinkSync projectPath, path.join(humanPath, name)
-    fs.symlinkSync projectFile, path.join(humanPath, name + '.json')
+    fs.symlinkSync path.resolve(projectPath), path.join(humanPath, name)
+    fs.symlinkSync path.resolve(projectFile), path.join(humanPath, name + '.json')
     {projectPrivateKey, salt}
 
   #  returns <filename><extension> without project's folder name
@@ -100,6 +99,7 @@ class FsStorage
     _.find extensions, (extension) -> extension != '.json'
 
   _reloadExtensions: (projectPublicKey) =>
+    @extensions = {}
     new Promise (resolve, reject) =>
       fs.readdir path.join(@path, 'public', projectPublicKey), (err, files) =>
         if err
