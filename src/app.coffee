@@ -5,6 +5,7 @@ router = require './router'
 fs = require 'fs'
 parser = require './parser'
 _ = require 'underscore'
+colors = require 'colors'
 
 app = (argv) ->
   new Promise (resolve, reject) ->

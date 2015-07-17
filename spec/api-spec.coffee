@@ -57,7 +57,8 @@ uploadImage = (imageUniqKey, filePath) ->
       resolve response
 
 downloadImage = (imagePublicKey, extension) ->
-  url = "#{API_HOST}:#{API_PORT}/#{projectPrivateKey}/#{imagePublicKey}#{extension}"
+  projectPublicKey = Coder.priv2pub projectPrivateKey
+  url = "#{API_HOST}:#{API_PORT}/#{projectPublicKey}/#{imagePublicKey}#{extension}"
   new Promise (resolve, reject) =>
     request.get url, (error, response) ->
       resolve response
@@ -90,7 +91,6 @@ describe 'Stockman server', ->
 
   describe 'should be friendly', ->
     describe 'GET /hello', ->
-      # POST http://v1.stockman.com/<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
       it "should be success and return 'hello'", (done) ->
         request.get {url: "#{API_HOST}:#{API_PORT}/hello"}, (error, response) ->
           assert.equal response.statusCode, 200
@@ -110,11 +110,11 @@ describe 'Stockman server', ->
       describe 'should be success', ->
 
         # todo: try remove async
-        given.async(undefined, 'jpg')
+        given.async('', '.jpg')
         .it 'with extension', (done, extension) ->
           uploadImage(SINGLE_IMAGE_UNIQ_KEY, SINGLE_IMAGE_PATH).then ->
-            imageUniqKey = coder.uniq2pub SINGLE_IMAGE_UNIQ_KEY
-            downloadImage imageUniqKey, extension
+            imagePublicKey = coder.uniq2pub SINGLE_IMAGE_UNIQ_KEY
+            downloadImage imagePublicKey, extension
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE

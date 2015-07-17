@@ -42,13 +42,13 @@ class FsStorage
 
   getFilePath: (projectPublicKey, imagePublicKey, extension) =>
     new Promise (resolve, reject) =>
-      if extension?
+      if !_.isEmpty(extension)
         resolve "#{imagePublicKey}#{extension}"
       else
         @_completeFileName(projectPublicKey, imagePublicKey).then (fileName) ->
           resolve fileName
     .then (relativeFilePath) =>
-      path.join @path, 'public', projectPublicKey, relativeFilePath
+      path.resolve path.join(@path, 'public', projectPublicKey, relativeFilePath)
 
   deleteFile: (projectPublicKey, imagePublicKey) =>
     new Promise (resolve, reject) =>
@@ -90,7 +90,7 @@ class FsStorage
       else
         @_reloadExtensions(projectPublicKey).then =>
           extension = @_findInExtensions(projectPublicKey, imagePublicKey)
-          resolve "#{imagePublicKey}.#{extension}"
+          resolve "#{imagePublicKey}#{extension}"
         , reject
 
   # Working with extensions
@@ -101,7 +101,7 @@ class FsStorage
 
   _reloadExtensions: (projectPublicKey) =>
     new Promise (resolve, reject) =>
-      fs.readdir @_buildPath(projectPublicKey), (err, files) =>
+      fs.readdir path.join(@path, 'public', projectPublicKey), (err, files) =>
         if err
           reject "can't read the project directory: #{projectPublicKey}"
         else

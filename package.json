@@ -32,6 +32,7 @@
     "node-gearman": "*",
     "aws-sdk": "*",
     "argparse": "*",
-    "mkdirp": "*"
+    "mkdirp": "*",
+    "colors": "*"
   }
 }
