@@ -10,14 +10,8 @@ parser.addArgument ['-p', '--path'],
   help: 'Working path'
   defaultValue: '.'
 
-#storageModuleFiles = fs.readdirSync './storage'
-#storageChoices = for storageModuleFile in storageModuleFiles
-#  storageModuleFile.replace /-storage.\w+$/, ''
-#
-parser.addArgument ['-s', '--storage'],
-  help: 'Using storage'
-#  choices: storageChoices
-  defaultValue: 'fs'
+parser.addArgument ['-c', '--config'],
+  help: 'Config file'
 
 subparsers = parser.addSubparsers
   title: 'Commands'

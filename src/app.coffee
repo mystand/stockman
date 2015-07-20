@@ -6,13 +6,17 @@ fs = require 'fs'
 parser = require './parser'
 _ = require 'underscore'
 colors = require 'colors'
+yaml = require 'js-yaml'
 
 app = (argv) ->
   new Promise (resolve, reject) ->
     args = parser.parseArgs argv
-    config = args # Temporary
+    config = if args.config
+      yaml.safeLoad(fs.readFileSync(args.config, 'utf8')).extend _(argv).omit('config')
+    else
+      args
 
-    Storage = require "./storage/#{config.storage}-storage"
+    Storage = require "./storage/#{config.storage || 'fs'}-storage"
     storage = new Storage config
 
     switch config.command
