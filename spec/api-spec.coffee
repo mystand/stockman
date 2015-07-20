@@ -109,7 +109,8 @@ describe 'Stockman server', ->
     describe 'POST upload image', ->
       # POST /<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
       it 'should be success', () ->
-        uploadImage(SINGLE_IMAGE_UNIQ_KEY, SINGLE_IMAGE_PATH).then (response) ->
+        imageUniqKey = Coder.randomKey()
+        uploadImage(imageUniqKey, SINGLE_IMAGE_PATH).then (response) ->
           assert.equal response.statusCode, 200
           assert.equal response.body, '{}'
 
@@ -118,18 +119,37 @@ describe 'Stockman server', ->
       describe 'should be success', ->
         given.async('', '.jpg')
         .it 'with extension', (done, extension) ->
-          uploadImage(SINGLE_IMAGE_UNIQ_KEY, SINGLE_IMAGE_PATH).then ->
-            downloadImage SINGLE_IMAGE_UNIQ_KEY, extension
+          imageUniqKey = Coder.randomKey()
+          uploadImage(imageUniqKey, SINGLE_IMAGE_PATH).then ->
+            downloadImage imageUniqKey, extension
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE
             done()
           .catch (err) -> done(err)
-    #
+
+    describe 'GET download image with processing string', ->
+      # GET /<PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[/<PROCESSING_STRING>][.<EXTENSION>]
+      describe 'should be success', ->
+        given.async('', '.jpg')
+        .it 'with extension', (done, extension) ->
+          imageUniqKey = Coder.randomKey()
+          uploadImage(imageUniqKey, SINGLE_IMAGE_PATH).then ->
+            downloadImage imageUniqKey, extension
+          .then (response) ->
+            assert.equal response.statusCode, 200
+            assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE
+            done()
+          .catch (err) -> done(err)
+
     describe 'DELETE remove image', ->
       # DELETE /<PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
       it 'should be success', ->
-        uploadImage(SINGLE_IMAGE_UNIQ_KEY, SINGLE_IMAGE_PATH).then ->
-          deleteImage(SINGLE_IMAGE_UNIQ_KEY).then (response) ->
+        imageUniqKey = Coder.randomKey()
+        uploadImage(imageUniqKey, SINGLE_IMAGE_PATH).then ->
+          deleteImage(imageUniqKey).then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.body, '{}'
+            downloadImage(imageUniqKey).then (response) ->
+              assert.equal response.statusCode, 404
+              assert.equal response.body, "Can't find file"

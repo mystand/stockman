@@ -5,13 +5,15 @@ express = require 'express'
 _ = require 'underscore'
 Coder = require './coder'
 multer = require 'multer'
+request = require 'request'
+convert = require './convert'
 
 module.exports = (config, storage) ->
-
   router = express.Router()
+  tmpPath = path.join config.path, 'tmp'
 
   multerMiddleware = multer
-    dest: "#{config.path}/tmp"
+    dest: tmpPath
 
   log =
     info: console.log
@@ -29,7 +31,7 @@ module.exports = (config, storage) ->
     storage.getSalt(req.params.projectPrivateKey).then (salt) ->
       coder = new Coder salt
       imagePublicKey = coder.priv2pub req.params.imagePrivateKey
-      storage.saveFile req.files.file, projectPublicKey, imagePublicKey
+      storage.saveFile req.files.file.path, projectPublicKey, imagePublicKey
     .then ->
       res.send {}
     .catch (error) ->
@@ -38,14 +40,25 @@ module.exports = (config, storage) ->
 
   #2) просмотр картинки
   #GET <PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[.<EXTENSION>]
-  router.get '/:projectPublicKey/:imagePublicKeyWithExtension', (req, res) ->
-#    log.info "GET #{req.path}"
-    {name:imagePublicKey, ext:extension} = path.parse req.params.imagePublicKeyWithExtension
-    storage.getFilePath(req.params.projectPublicKey, imagePublicKey, extension).then (filePath) ->
-      res.sendFile filePath
+  router.get '/:projectPublicKey/:arg1/:arg2?', (req, res) ->
+    projectPublicKey = req.params.projectPublicKey
+    [imagePublicKeyWithExtension, processingString] = [req.params.arg2, req.params.arg1].filter (arg) -> !_.isEmpty(arg)
+    {name:imagePublicKey, ext:extension} = path.parse imagePublicKeyWithExtension
+
+    storage.getFile(projectPublicKey, imagePublicKey, extension, processingString)
+    .then (fileLocation) ->
+      _send res, fileLocation
+    , (err) ->
+      if processingString
+        storage.getFile(projectPublicKey, imagePublicKey, extension).then (fileLocation) ->
+          _localizeFile(fileLocation).then (localFilePath) ->
+            convert(localFilePath, processingString).then (resultFilePath) ->
+              storage.saveFile(resultFilePath, projectPublicKey, imagePublicKey, processingString).then (fileLocation) ->
+                _send res, fileLocation
+      else
+        throw status: 404, error: "Can't find file"
     .catch (error) ->
-      log.error error
-      res.status(500).send error: error
+      res.status(error.status).send error.error
 
   #3) удаление картинки
   #DELETE <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>
@@ -58,4 +71,31 @@ module.exports = (config, storage) ->
     .then ->
       res.send {}
     .catch (error) ->
-      res.send error: error
+      res.status(error.status).send error.error
+
+  _localizeFile = (fileLocation) ->
+    new Promise (resolve, reject) ->
+      switch fileLocation.type
+        when 'local'
+          resolve fileLocation.data
+        when 'remote'
+          false # TODO: download image to the tmp path
+        when 'memory'
+          false # TODO: save image to the tmp path
+        else
+          reject status: 500, error: 'Unknown fileLocation type'
+
+  _send = (res, fileLocation) ->
+    switch fileLocation.type
+      when 'local'
+        res.sendFile fileLocation.data
+      when 'remote'
+        false
+        # TODO: download image to the tmp path
+      when 'memory'
+        false
+        # TODO: save image to the tmp path
+      else
+        res.send status: 500, error: 'Unknown fileLocation type'
+
+  router
