@@ -136,7 +136,7 @@ describe 'Stockman server', ->
         .it 'with extension', (done, extension) ->
           imageUniqKey = Coder.randomKey()
           uploadImage(imageUniqKey, SINGLE_IMAGE_PATH).then ->
-            downloadImage imageUniqKey, extension, 'w_200,h_200'
+            downloadImage imageUniqKey, extension, 'w_100,h_100'
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE

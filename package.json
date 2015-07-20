@@ -35,6 +35,7 @@
     "mkdirp": "*",
     "colors": "*",
     "async": "*",
-    "recursive-readdir": "*"
+    "recursive-readdir": "*",
+    "imagemagick": "*"
   }
 }
