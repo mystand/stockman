@@ -6,11 +6,12 @@ _ = require 'underscore'
 Coder = require './coder'
 multer = require 'multer'
 request = require 'request'
-convert = require './convert'
+Wizard = require './wizard'
 
 module.exports = (config, storage) ->
   router = express.Router()
   tmpPath = path.join config.path, 'tmp'
+  wizard = new Wizard tmpPath
 
   multerMiddleware = multer
     dest: tmpPath
@@ -42,23 +43,28 @@ module.exports = (config, storage) ->
   #GET <PROJECT_PUBLIC_KEY>/<IMAGE_PUBLIC_KEY>[.<EXTENSION>]
   router.get '/:projectPublicKey/:arg1/:arg2?', (req, res) ->
     projectPublicKey = req.params.projectPublicKey
-    [imagePublicKeyWithExtension, processingString] = [req.params.arg2, req.params.arg1].filter (arg) -> !_.isEmpty(arg)
-    {name:imagePublicKey, ext:extension} = path.parse imagePublicKeyWithExtension
+    [imagePublicKeyWithExtension, processingStringWithExtension] = [req.params.arg1, req.params.arg2].filter (arg) -> !_.isEmpty(arg)
+
+    if processingStringWithExtension
+      imagePublicKey = imagePublicKeyWithExtension
+      {name:processingString, ext:extension} = path.parse processingStringWithExtension
+    else
+      {name:imagePublicKey, ext:extension} = path.parse imagePublicKeyWithExtension
 
     storage.getFile(projectPublicKey, imagePublicKey, extension, processingString)
     .then (fileLocation) ->
       _send res, fileLocation
-    , (err) ->
+    , ->
       if processingString
         storage.getFile(projectPublicKey, imagePublicKey, extension).then (fileLocation) ->
           _localizeFile(fileLocation).then (localFilePath) ->
-            convert(localFilePath, processingString).then (resultFilePath) ->
+            wizard.turnTo(localFilePath, processingString).then (resultFilePath) ->
               storage.saveFile(resultFilePath, projectPublicKey, imagePublicKey, processingString).then (fileLocation) ->
                 _send res, fileLocation
       else
         throw status: 404, error: "Can't find file"
     .catch (error) ->
-      res.status(error.status).send error.error
+      res.status(error.status || 500).send error.error || 'Unexpected error'
 
   #3) удаление картинки
   #DELETE <PROJECT_PRIVATE_KEY>/<IMAGE_PRIVATE_KEY>

@@ -3,7 +3,6 @@ _ = require 'underscore'
 path = require 'path'
 Coder = require '../coder'
 mkdirp = require 'mkdirp'
-recursiveReaddir = require 'recursive-readdir'
 
 class FsStorage
   constructor: (@config) ->
@@ -60,7 +59,7 @@ class FsStorage
             @db[projectPublicKey] ||= {}
             @db[projectPublicKey][imagePublicKey] ||= {}
             @db[projectPublicKey][imagePublicKey][processingString || 'origin'] = destFilePath
-            resolve type: 'local', data: destFilePath
+            resolve type: 'local', data: path.resolve(destFilePath)
 
   getFile: (projectPublicKey, imagePublicKey, extension, processingString = '') =>
     filePath = if extension

@@ -56,10 +56,11 @@ uploadImage = (imageUniqKey, filePath) ->
     request.post options, (error, response) ->
       if error then reject(error) else resolve(response)
 
-downloadImage = (imageUniqKey, extension) ->
+downloadImage = (imageUniqKey, extension, processingString) ->
   imagePublicKey = coder.uniq2pub imageUniqKey
   projectPublicKey = Coder.priv2pub projectPrivateKey
-  url = "#{API_HOST}:#{API_PORT}/#{projectPublicKey}/#{imagePublicKey}#{extension}"
+  rest = _([imagePublicKey, processingString]).compact().join('/')
+  url = "#{API_HOST}:#{API_PORT}/#{projectPublicKey}/#{rest}#{extension}"
   new Promise (resolve, reject) =>
     request.get url, (error, response) ->
       if error then reject(error) else resolve(response)
@@ -135,7 +136,7 @@ describe 'Stockman server', ->
         .it 'with extension', (done, extension) ->
           imageUniqKey = Coder.randomKey()
           uploadImage(imageUniqKey, SINGLE_IMAGE_PATH).then ->
-            downloadImage imageUniqKey, extension
+            downloadImage imageUniqKey, extension, 'w_200,h_200'
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE
