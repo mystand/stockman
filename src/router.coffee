@@ -52,17 +52,16 @@ module.exports = (config, storage) ->
       {name:imagePublicKey, ext:extension} = path.parse imagePublicKeyWithExtension
 
     storage.getFile(projectPublicKey, imagePublicKey, extension, processingString)
-    .then (fileLocation) ->
-      _send res, fileLocation
-    , ->
+    .catch ->
       if processingString
         storage.getFile(projectPublicKey, imagePublicKey, extension).then (fileLocation) ->
           _localizeFile(fileLocation).then (localFilePath) ->
             wizard.turnTo(localFilePath, processingString).then (resultFilePath) ->
-              storage.saveFile(resultFilePath, projectPublicKey, imagePublicKey, processingString).then (fileLocation) ->
-                _send res, fileLocation
+              storage.saveFile(resultFilePath, projectPublicKey, imagePublicKey, processingString).then (fileLocation)
       else
         throw status: 404, error: "Can't find file"
+    .then (fileLocation) ->
+      _send res, fileLocation, projectPublicKey, imagePublicKey, extension, processingString
     .catch (error) ->
       res.status(error.status || 500).send error.error || 'Unexpected error'
 
@@ -91,16 +90,22 @@ module.exports = (config, storage) ->
         else
           reject status: 500, error: 'Unknown fileLocation type'
 
-  _send = (res, fileLocation) ->
+  _send = (res, fileLocation, projectPublicKey, imagePublicKey, extension, processingString) ->
     switch fileLocation.type
       when 'local'
-        res.sendFile fileLocation.data
+        realExtension = path.extname fileLocation.data
+        if realExtension == extension
+          res.sendFile fileLocation.data
+        else
+          res.redirect '/' + _([projectPublicKey, imagePublicKey, extension, processingString]).compact().join('/') + realExtension
       when 'remote'
-        false
-        # TODO: download image to the tmp path
+        res.redirect fileLocation.data
       when 'memory'
-        false
-        # TODO: save image to the tmp path
+        realExtension = path.extname fileLocation.data
+        if realExtension == extension
+          fileLocation.data.pipe res
+        else
+          res.redirect '/' + _([projectPublicKey, imagePublicKey, extension, processingString]).compact().join('/') + realExtension
       else
         res.send status: 500, error: 'Unknown fileLocation type'
 

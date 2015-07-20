@@ -2,6 +2,7 @@ fs = require 'fs'
 request = require 'request'
 assert = require('chai').assert
 given = require 'mocha-testdata'
+path = require 'path'
 _ = require 'underscore'
 
 Coder = require '../src/coder'
@@ -126,6 +127,7 @@ describe 'Stockman server', ->
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE
+            assert.equal path.extname(response.request.href), '.jpg'
             done()
           .catch (err) -> done(err)
 
@@ -140,6 +142,7 @@ describe 'Stockman server', ->
           .then (response) ->
             assert.equal response.statusCode, 200
             assert.equal response.headers['content-type'], SINGLE_IMAGE_CONTENT_TYPE
+            assert.equal path.extname(response.request.href), '.jpg'
             done()
           .catch (err) -> done(err)
 
