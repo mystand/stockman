@@ -36,7 +36,7 @@
     "colors": "*",
     "async": "*",
     "recursive-readdir": "*",
-    "imagemagick": "*",
+    "imagemagick-native": "*",
     "js-yaml": "*"
   }
 }

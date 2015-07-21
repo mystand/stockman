@@ -1,35 +1,36 @@
 Coder = require './coder'
 path = require 'path'
 fs = require 'fs'
-imagemagick = require 'imagemagick'
+_ = require 'underscore'
+imagemagick = require 'imagemagick-native'
 
 class Wizard
   constructor: (@tmpPath) ->
 
+  PROCESSORS:
+    w: (options, argument) ->
+      options.width = argument
+
+    h: (options, argument) ->
+      options.height = argument
+
   turnTo: (src, processingString) =>
-    options = {}
+    ext = path.extname src
+    tmpFilePath = path.join @tmpPath, "#{Coder.randomKey()}#{ext}"
+    convertOptions =
+      format: ext.replace('.', ''),
+      quality: 100
 
-    processingString.split(',').forEach (p) ->
-      [key, option] = p.split '_'
-      options[key] = option
-
-    args = []
-    if options.w || options.h
-      args.push '-resize'
-      args.push "#{options.w}x#{options.h}"
+    for parameter in processingString.split(',')
+      [key, argument] = parameter.split '_'
+      processor = @PROCESSORS[key]
+      processor(convertOptions, argument) if _.isFunction(processor)
 
     new Promise (resolve, reject) =>
-      ext = path.extname src
-      tmpFilePath = path.join @tmpPath, "#{Coder.randomKey()}#{ext}"
+      fs.readFile src, (error, data) ->
+        options = _.extend {srcData: data}, convertOptions
 
-      console.log '---------------'.yellow
-      console.log [src, args..., tmpFilePath]
-      console.log '---------------'.yellow
-
-      imagemagick.convert [src, args..., tmpFilePath], (err) =>
-        if !err
-          resolve tmpFilePath
-        else
-          reject status: 500, error: err
+        fs.writeFile tmpFilePath, imagemagick.convert(options), (err) ->
+          if err then reject(status: 500, error: err) else resolve(tmpFilePath)
 
 module.exports = Wizard
